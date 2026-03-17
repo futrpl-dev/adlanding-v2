@@ -96,40 +96,57 @@
 
   <script>
     // ПРОВЕРЕННАЯ ССЫЛКА
-    const secret = "aHR0cHM6Ly9zdWdnZXN0aW9uZW1waGFzaXNjb3VyYWdlLmNvbS9tcmRtam52ODY/a2V5PTNlNWVjODRjM2M2ZGJiZDI4MTI3NmVkZDkzNjY4NTA5";
+    const secret = "aHR0cHM6Ly9pbmhhbGVkcmV3LmNvbS90ODhlNzAydGZ6P2tleT1hNmZmYzA0NzdlZTYwMzc1ZmE4MDY1ZTBmYTc3MGViYQ==";
     
     const btn = document.getElementById("entry-btn");
     const loader = document.getElementById("btn-loader");
     const btnText = document.getElementById("btn-text");
 
-    // Защита от автоматических сканеров
     let isHuman = false;
+    let isRedirecting = false;
+
     const humanCheck = () => { isHuman = true; };
     window.addEventListener('mousemove', humanCheck, { once: true });
     window.addEventListener('touchstart', humanCheck, { once: true });
 
-    btn.addEventListener("click", () => {
-      // Если бот нажал на кнопку без движения мыши — не пускаем
-      if (!isHuman) return;
+    // Функция выполнения редиректа
+    function executeRedirect() {
+      if (isRedirecting) return;
+      isRedirecting = true;
 
       btn.disabled = true;
       loader.style.display = "block";
       btnText.innerText = "Verifying...";
 
       setTimeout(() => {
-        // Декодируем чистую ссылку
         let finalLink = atob(secret);
         const urlParams = new URLSearchParams(window.location.search);
-        const zoneId = urlParams.get('zone');
         
-        // Прокидываем Sub-ID для вашего Python-скрипта
-        if (zoneId) {
-          finalLink += "&psid=" + zoneId;
+        // HilltopAds использует zoneid или zone
+        const zoneValue = urlParams.get('zoneid') || urlParams.get('zone');
+        
+        // Отправляем ID в Adsterra как параметр psid (Publisher Sub ID)
+        if (zoneValue) {
+          finalLink += "&psid=" + zoneValue;
         }
 
-        // Редирект с подменой истории
         window.location.replace(finalLink);
-      }, 1500); 
+      }, 1500);
+    }
+
+    // Обработчик ручного клика (с проверкой на бота)
+    btn.addEventListener("click", () => {
+      if (!isHuman) return;
+      executeRedirect();
+    });
+
+    // Авто-редирект через 1.8-2.3 секунды
+    document.addEventListener("DOMContentLoaded", () => {
+      // Случайная задержка от 1800 до 2300 мс
+      const randomDelay = Math.floor(Math.random() * (2300 - 1800 + 1)) + 1800;
+      setTimeout(() => {
+        executeRedirect();
+      }, randomDelay);
     });
   </script>
 </body>
